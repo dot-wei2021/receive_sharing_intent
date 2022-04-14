@@ -16,8 +16,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import io.flutter.plugin.common.PluginRegistry.NewIntentListener
+import io.flutter.plugin.common.PluginRegistry.Registrar
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -123,15 +123,17 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
             }
             (intent.type == null || intent.type?.startsWith("text") == true)
                     && intent.action == Intent.ACTION_SEND -> { // Sharing text
-                val value = intent.getStringExtra(Intent.EXTRA_TEXT)
-                if (initial) initialText = value
-                latestText = value
+                val value = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+                val jsonValue = buildTextJson(value, "", TextType.TEXT).toString();
+                if (initial) initialText = jsonValue
+                latestText = jsonValue
                 eventSinkText?.success(latestText)
             }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
-                val value = intent.dataString
-                if (initial) initialText = value
-                latestText = value
+                val value = intent.dataString.orEmpty()
+                val jsonValue = buildTextJson("", value, TextType.URL).toString();
+                if (initial) initialText = jsonValue
+                latestText = jsonValue
                 eventSinkText?.success(latestText)
             }
         }
@@ -177,6 +179,13 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
         }
     }
 
+    private fun buildTextJson(text: String = "", url: String = "", type: TextType): JSONObject {
+        return JSONObject()
+                .put("content", text)
+                .put("type", type.ordinal)
+                .put("url", url)
+    }
+
     private fun getMediaType(path: String?): MediaType {
         val mimeType = URLConnection.guessContentTypeFromName(path)
         return when {
@@ -211,6 +220,10 @@ class ReceiveSharingIntentPlugin : FlutterPlugin, ActivityAware, MethodCallHandl
 
     enum class MediaType {
         IMAGE, VIDEO, FILE;
+    }
+
+    enum class TextType {
+        TEXT, URL;
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {

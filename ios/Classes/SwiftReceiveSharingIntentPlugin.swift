@@ -164,11 +164,11 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                 }
             } else if url.fragment == "text" {
                 if let key = url.host?.components(separatedBy: "=").last,
-                    let sharedArray = userDefaults?.object(forKey: key) as? [String] {
-                    latestText =  sharedArray.joined(separator: ",")
-                    if(setInitialData) {
-                        initialText = latestText
-                    }
+                   let sharedJson = userDefaults?.object(forKey: key) as? String {
+                   latestText = sharedJson
+                   if(setInitialData) {
+                       initialText = latestText
+                   }
                     eventSinkText?(latestText)
                 }
             } else {
